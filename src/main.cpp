@@ -4,7 +4,10 @@
 #include <dbg.h>
 #include <boost/program_options.hpp>
 #include <string>
+#include <thread>
+#include <chrono>
 
+using namespace std::chrono_literals;
 namespace po = boost::program_options;
 void handleInjectionMessage(InjectDllReturnValue injectionMessage);
 
@@ -16,6 +19,7 @@ void handleInjectionMessage(InjectDllReturnValue injectionMessage);
   ("dll,d", po::value<std::string>(),"The dll to inject")
   ("process,p", po::value<std::string>(), "The program exe name to inject the dll. Example: mspaint.exe")
   ("watch,w", "Inject the DLL as soon as the specified program is launched")
+  ("delay", po::value<float>(), "Wait a certain aount of time before injecting in seconds")
   ;
 
   po::variables_map vm;
@@ -26,6 +30,20 @@ void handleInjectionMessage(InjectDllReturnValue injectionMessage);
   {
     std::cerr << desc << "\n";
     return 0;
+  }
+
+  float delay;
+  if (vm.count("delay"))
+  {
+    try
+    {
+      delay = vm["delay"].as<float>();
+    }
+    catch (...)
+    {
+      std::cerr << "Failed to get the delay\n";
+      exit(1);
+    }
   }
 
   if (!vm.count("dll"))
@@ -42,7 +60,9 @@ void handleInjectionMessage(InjectDllReturnValue injectionMessage);
     if (vm.count("watch"))
     {
       DWORD processPid = waitForProgramLaunchSync(processToInjectTo);
-      auto returnValue = InjectDll(processPid, utf16ToUtf8(processToInjectTo));
+      if (delay)
+        Sleep(delay * 1000);
+      InjectDllReturnValue returnValue = InjectDll(processPid, utf16ToUtf8(processToInjectTo));
       handleInjectionMessage(returnValue);
     }
     else
@@ -51,7 +71,11 @@ void handleInjectionMessage(InjectDllReturnValue injectionMessage);
       BOOST_FOREACH(process p, process::enumAllProcess())
       {
         if (p.name == processToInjectTo)
+        {
+          if (delay)
+            Sleep(delay * 1000);
           handleInjectionMessage(InjectDll(p.pid, dllToInject));
+        }
       }
     }
   }
