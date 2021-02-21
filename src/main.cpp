@@ -71,7 +71,7 @@ void handleInjectionMessage(InjectDllReturnValue injectionMessage)
   switch (injectionMessage)
   {
   case InjectDllReturnValue::AcessWindowHandleError:
-    std::cerr << "Failed to acess the window handle.\n";
+    std::cerr << "Failed to acess the process handle.\n";
     exit(1);
     break;
   case InjectDllReturnValue::InexistantDLL:
