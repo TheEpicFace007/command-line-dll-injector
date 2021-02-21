@@ -1,0 +1,13 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "projectTarget": "main.exe",
+      "name": "mydemo.exe with args",
+      "args": [
+        "-d mydll.dll -p notepad.exe"
+      ]
+    }
+  ]
+}
