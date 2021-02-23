@@ -6,7 +6,7 @@ include_directories(main "include")
 target_link_libraries(main "psapi.lib" "Wtsapi32.lib")
 
 set(Boost_USE_STATIC_LIBS ON) 
-set(Boost_USE_MULTITHREADED ON)  
+set(Boost_USE_MULTITHREADED OFF)  
 set(Boost_USE_STATIC_RUNTIME ON) 
 set_property(TARGET main PROPERTY CXX_STANDARD 17)
 set_property(TARGET main PROPERTY CXX_EXTENSIONS ON)
@@ -27,6 +27,10 @@ endif()
 FIND_PACKAGE(Boost)
 target_include_directories(main PUBLIC Boost_INCLUDE_DIR)
 
+# target_link_options(main PUBLIC)
+target_link_options(main PUBLIC "/subsystem:console")
+target_compile_options(main PUBLIC
+"/MT")
+
 if (MSVC)
-  add_compile_options("/subsystem:console")
 endif()
