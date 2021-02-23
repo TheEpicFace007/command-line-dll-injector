@@ -20,6 +20,7 @@
 #include <BlackBone/Misc/Utils.h>
 #include <filesystem>
 #include <BlackBone/PE/PEImage.h>
+#include <spinner.h>
 #include <BlackBone/PE/ImageNET.h>
 
 using namespace std::chrono_literals;
@@ -132,9 +133,12 @@ if (vm.count("exe"))
     // attach the dll
     if (vm.count("unload-dll"))
     {
+      spinnercpp::spinner s(200ms, 63, "Unloaded dll!", "", "", "  Unloading " + vm["dll"].as<std::string>() + "...");
+      s.start();
       auto isError = NT_ERROR(process.modules().Unload(process.modules().GetModule(utf8ToUtf16(vm["dll"].as<std::string>()))));
       if (isError)
         std::cerr << "There was a error unloading the dll on the process. Continuing execution of the program.";
+      s.stop();
     }
 
     if (dll_peimage.pureIL())
