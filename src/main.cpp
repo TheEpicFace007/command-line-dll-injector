@@ -27,7 +27,7 @@ namespace po = boost::program_options;
 
 int main(int argc, char const *argv[])
 {
-  SetConsoleTitleW(L"Command line dll injector")
+  SetConsoleTitleW(L"Command line dll injector");
   blackbone::InitializeOnce();
   po::options_description desc("Allowed options:");
   desc.add_options()
