@@ -11,6 +11,9 @@ set(Boost_USE_STATIC_RUNTIME ON)
 set_property(TARGET main PROPERTY CXX_STANDARD 17)
 set_property(TARGET main PROPERTY CXX_EXTENSIONS ON)
 
+# add blackbone
+target_include_directories(main PUBLIC libs)
+target_link_libraries(main BlackBoneLib)
 
 target_include_directories(main PUBLIC "include")
 target_include_directories(main PUBLIC "C:/Users/ASD/Project/cplusplus/lib/vcpkg/installed/x64-windows/include") # set this as the vscode intelisense won't show the path unless I do this
