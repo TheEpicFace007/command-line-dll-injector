@@ -62,3 +62,7 @@ void waitForProgramLaunchAsync(const std::wstring toWatch, std::function<void(DW
  * @param path The path of the dll
 */
 void InjectDll(DWORD pid, std::string dll);
+
+bool IsX86Process(HANDLE process);
+
+BOOL IsWow64(HANDLE process);

@@ -1,7 +1,7 @@
-#ifdef DEBUG
-#else
-// #pragma comment(lib, "../BlackBone.lib")
+#ifdef _DEBUG
 #pragma comment(lib, "../dBlackBone.lib")
+#else
+#pragma comment(lib, "../BlackBone.lib")
 #endif
 
 #include <iostream>
@@ -30,12 +30,13 @@ int main(int argc, char const *argv[])
 
   blackbone::InitializeOnce();
 
-  po::options_description desc("Allowed options");
+  po::options_description desc("command line dll injector");
   desc.add_options()
   ("help,h", "Produce help message of the program")
   ("dll,d", po::value<std::string>(), "The dll to inject")
   ("exe,e", po::value<std::string>(), "The program exe file name to inject the onto Example: mspaint.exe")
-  ("process-name,p", po::value<std::string>(), "The program process name")("watch,w", "Inject the DLL as soon as the specified program is launched")
+  // ("process-name,p", po::value<std::string>(), "The program process name")
+  ("watch,w", "Inject the DLL as soon as the specified program is launched")
   ("delay", po::value<float>(), "Wait a certain aount of time before injecting in seconds");
 
   po::variables_map vm;
@@ -56,7 +57,7 @@ int main(int argc, char const *argv[])
   }
 
   // Set the delay
-  float delay;
+  float delay = 0;
   if (vm.count("delay"))
   {
     try
@@ -82,12 +83,7 @@ int main(int argc, char const *argv[])
   }
 
   // Attacg the dll
-  if (vm.count("process-name"))
-  {
-    std::cerr << "Feature not added yet" << std::endl; 
-    return 1;
-  }
-  else if (vm.count("exe"))
+if (vm.count("exe"))
   {
     DWORD pid;
     std::string exe_name = vm["exe"].as<std::string>();
@@ -107,15 +103,13 @@ int main(int argc, char const *argv[])
     }
     
     blackbone::Process process;
-    process.EnsureInit();
-    HANDLE processHandle;
     HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
     blackbone::pe::PEImage dll_peimage;
     dll_peimage.Load(utf8ToUtf16(dll_path));
 
     // Check the file format
-/*     if (IsWow64(h) && dll_peimage.mType() != blackbone::eModType::mt_mod64)
+    if (IsWow64(h) && dll_peimage.mType() != blackbone::eModType::mt_mod64)
     {
       std::cerr << "Error: attempt to load a 32 bit dll on a 64 bit process\n";
       return 1;
@@ -125,29 +119,45 @@ int main(int argc, char const *argv[])
       std::cerr << "Error: attempt to load a 64 bit dll on a 32 bit process\n";
       return 1;
     }
- */    
-    process.Attach(pid);
+
+    // NT_ERROR
+    if (((((ULONG)(process.Attach(pid))) >> 30) == 3))
+    {
+      std::cout << "An error has happened while attaching blackbone to the process.\n";
+      return 1;
+    }
     if (dll_peimage.pureIL())
     {
-      bool didInjectILDll = process.modules().InjectPureIL(
-        blackbone::ImageNet::GetImageRuntimeVer(dll_peimage.path().c_str()),
-        dll_peimage.path(),
-        std::wstring(),
-        std::wstring(),
-        0
-      );
+      bool didInjectILDll;
+      DWORD returnCode = 0;
+
+      didInjectILDll = process.modules().InjectPureIL(
+          blackbone::ImageNET().GetImageRuntimeVer(dll_peimage.path().c_str()),
+          dll_peimage.path(),
+          std::wstring(),
+          std::wstring(),
+          returnCode);
 
       if (!didInjectILDll)
       {
-        std::cerr << "An error has happened while injecting an Il(dot net) dll\n";
-        return 2;
+dll_injection_error:
+        std::cerr << "An error has happened while injecting the dll\n";
+        return 1;
       }
     }
     else
     {
-
+      bool didInjectedDll;
+      if (!process.modules().Inject(dll_peimage.path(), process.threads().getMain()).success())
+      {
+        std::cerr << "An error has happened when injecting the dll\n";
+        return 1;
+      }
     }
+    std::cout << "Sucesfully injected the dll into the process!\n";
+    return 0;
   }
 
+  std::cout << desc << "\n";
   return 0;
 }

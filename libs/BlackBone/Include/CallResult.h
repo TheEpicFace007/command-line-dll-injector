@@ -9,6 +9,10 @@ namespace blackbone
 /// <summary>
 /// Function result or failure status
 /// </summary>
+#ifndef NT_SUCCESS
+#define NT_SUCCESS(status)	((NTSTATUS) (status) >= 0)
+#endif
+
 template <typename T>
 struct call_result_t
 {

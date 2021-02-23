@@ -64,17 +64,20 @@ DWORD waitForProgramLaunchSync(std::wstring toWatch)
 {
   spinnercpp::spinner s(200ms, 65, "", "", "  Waiting for " + utf16ToUtf8(toWatch) + " to launch");
   s.start();
+  auto start = std::chrono::steady_clock::now();
+
+
   while (true)
   {
     for (DWORD p : blackbone::Process::EnumByName(toWatch))
     {
       std::wstring pExe = getProcessExeName(p);
-      std::cout << dbg(utf16ToUtf8(pExe)) << std::endl;
-      std::cout << dbg(pExe == toWatch) << std::endl;
       if (pExe == toWatch)
       {
+        auto end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end - start;
         s.stop();
-        std::cout << std::endl << "Found the program!";
+        std::cout << std::endl << "Found " << utf16ToUtf8(toWatch) << " in " << elapsed_seconds.count() << "s" << std::endl;
         return p;
       }
     }
@@ -109,4 +112,36 @@ std::wstring getProcessExeName(DWORD pid)
   std::wstring f = file.path().filename().generic_wstring();
   return f;
   // return utf8ToUtf16(std::filesystem::directory_entry(fileName))
+}
+
+BOOL IsWow64(HANDLE process)
+{
+  BOOL bIsWow64 = FALSE;
+
+  typedef BOOL(WINAPI * LPFN_ISWOW64PROCESS)(HANDLE, PBOOL);
+  LPFN_ISWOW64PROCESS fnIsWow64Process;
+  fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+
+  if (NULL != fnIsWow64Process)
+  {
+    if (!fnIsWow64Process(process, &bIsWow64))
+    {
+      //handle error
+    }
+  }
+  return bIsWow64;
+}
+
+bool IsX86Process(HANDLE process)
+{
+  SYSTEM_INFO systemInfo = {0};
+  GetNativeSystemInfo(&systemInfo);
+
+  // x86 environment
+  if (systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
+    return true;
+
+  // Check if the process is an x86 process that is running on x64 environment.
+  // IsWow64 returns true if the process is an x86 process
+  return IsWow64(process);
 }
