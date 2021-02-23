@@ -9,6 +9,10 @@
 #include <spinner.h>
 #include <chrono>
 #include <filesystem>
+#include <BlackBone/Process/Process.h>
+#include <BlackBone/Process/ProcessCore.h>
+#include <BlackBone/Process/ProcessModules.h>
+#include "dbg.h"
 
 using namespace std::chrono_literals;
 
@@ -56,23 +60,27 @@ std::string utf16ToUtf8(std::wstring utf16Str)
   return conv.to_bytes(utf16Str);
 }
 
-DWORD waitForProgramLaunchSync(const std::wstring toWatch)
+DWORD waitForProgramLaunchSync(std::wstring toWatch)
 {
   spinnercpp::spinner s(200ms, 65, "", "", "  Waiting for " + utf16ToUtf8(toWatch) + " to launch");
   s.start();
   while (true)
   {
-    BOOST_FOREACH (process p, process::enumAllProcess())
+    for (DWORD p : blackbone::Process::EnumByName(toWatch))
     {
-      if (p.name == toWatch)
+      std::wstring pExe = getProcessExeName(p);
+      std::cout << dbg(utf16ToUtf8(pExe)) << std::endl;
+      std::cout << dbg(pExe == toWatch) << std::endl;
+      if (pExe == toWatch)
       {
         s.stop();
-        std::cout << "Found the program!";
-        return p.pid;
+        std::cout << std::endl << "Found the program!";
+        return p;
       }
     }
   }
   s.stop();
+  return NULL;
 }
 
 void waitForProgramLaunchAsync(const std::wstring toWatch, std::function<void(DWORD pid)> onLaunch)
@@ -83,6 +91,22 @@ void waitForProgramLaunchAsync(const std::wstring toWatch, std::function<void(DW
   }).detach();
 }
 
-void InjectDll(DWORD pid, std::string Path)
+void InjectDll(DWORD pid, std::string dll)
 {
+  
+}
+
+std::wstring getProcessExeName(DWORD pid)
+{
+  HANDLE pHandle;
+  constexpr int buffer_size = 1000;
+  wchar_t *fileName = new WCHAR[buffer_size];
+  HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+  
+  GetModuleFileNameExW(h, NULL, fileName, buffer_size);
+  std::filesystem::directory_entry file(fileName);
+  delete[] fileName;
+  std::wstring f = file.path().filename().generic_wstring();
+  return f;
+  // return utf8ToUtf16(std::filesystem::directory_entry(fileName))
 }

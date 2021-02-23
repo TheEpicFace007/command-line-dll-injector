@@ -13,6 +13,8 @@
 #include <functional>
 #include <thread>
 
+std::wstring getProcessExeName(DWORD pid);
+
 std::wstring utf8ToUtf16(std::string utf8Str);
 
 std::string utf16ToUtf8(std::wstring utf16Str);
@@ -22,13 +24,18 @@ struct process
 	/**
 	 * The exe name of the process
 	 */
-	std::wstring name;
+	std::wstring exe_name;
 	DWORD pid;
+	HANDLE process_handle()
+	{
+		HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, this->pid);
+		return processHandle;
+	}
 
 	process(DWORD pid, std::wstring name)
 	{
 		this->pid = pid;
-		this->name = name;
+		this->exe_name = name;
 	}
 
 	static std::vector<process> enumAllProcess();
@@ -39,7 +46,7 @@ struct process
  * @param toWatch the exe name of the program to wait to launch
  * @return The PID of the program that opened
 */
-DWORD waitForProgramLaunchSync(const std::wstring toWatch);
+DWORD waitForProgramLaunchSync(std::wstring toWatch);
 
 /**
  * Wait for a program to be opened asyncronously
@@ -49,19 +56,9 @@ DWORD waitForProgramLaunchSync(const std::wstring toWatch);
 */
 void waitForProgramLaunchAsync(const std::wstring toWatch, std::function<void(DWORD pid)> onLaunch);
 
-enum class InjectDllReturnValue
-{
-	AcessWindowHandleError,
-	MemAlocationError,
-	InjectionFail,
-	InjectionSucess,
-	InexistantDLL
-};
-
 /**
  * Inject a DLL
  * @param pid The process to inject the dll
  * @param path The path of the dll
- * @return Return false if there was a error while injecting
 */
-void InjectDll(DWORD pid, std::string Path);
+void InjectDll(DWORD pid, std::string dll);
