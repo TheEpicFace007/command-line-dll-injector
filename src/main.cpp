@@ -1,8 +1,8 @@
 #ifdef _DEBUG
-#pragma comment(lib, "../dBlackBone.lib")
+// #pragma comment(lib, "../dBlackBone.lib")
 #else
-#pragma comment(lib, "../BlackBone.lib")
 #endif
+#pragma comment(lib, "../BlackBone.lib")
 
 #include <iostream>
 #include <Windows.h>
@@ -27,10 +27,9 @@ namespace po = boost::program_options;
 
 int main(int argc, char const *argv[])
 {
-
+  SetConsoleTitleW(L"Command line dll injector")
   blackbone::InitializeOnce();
-
-  po::options_description desc("command line dll injector");
+  po::options_description desc("Allowed options:");
   desc.add_options()
   ("help,h", "Produce help message of the program")
   ("dll,d", po::value<std::string>(), "The dll to inject")
@@ -80,6 +79,8 @@ int main(int argc, char const *argv[])
       std::cerr << "Error: Dll doesn't exist\n";
       return 1;
     }
+    dll_path = std::filesystem::absolute(std::filesystem::directory_entry(dll_path).path()).generic_u8string();
+    std::cout << dbg(dll_path) << "\n";
   }
 
   // Attacg the dll
