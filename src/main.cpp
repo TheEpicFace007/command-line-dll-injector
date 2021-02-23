@@ -6,6 +6,7 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include <BlackBone/Process/RPC/RemoteFunction.hpp>
 
 using namespace std::chrono_literals;
 namespace po = boost::program_options;
@@ -46,45 +47,6 @@ void handleInjectionMessage(InjectDllReturnValue injectionMessage);
     }
   }
 
-  if (!vm.count("dll"))
-  {
-    std::cerr << "You didn't supplied a dll to inject. Here are the valid option\n";
-    std::cerr << desc << "\n";
-    return 1;
-  }
-
-  if (vm.count("process"))
-  {
-    std::string dllToInject = vm["dll"].as<std::string>();
-    std::wstring processToInjectTo = utf8ToUtf16(vm["process"].as<std::string>());
-    if (vm.count("watch"))
-    {
-      DWORD processPid = waitForProgramLaunchSync(processToInjectTo);
-      if (delay)
-        Sleep(delay * 1000);
-      InjectDllReturnValue returnValue = InjectDll(processPid, utf16ToUtf8(processToInjectTo));
-      handleInjectionMessage(returnValue);
-    }
-    else
-    {
-      DWORD pid;
-      BOOST_FOREACH(process p, process::enumAllProcess())
-      {
-        if (p.name == processToInjectTo)
-        {
-          if (delay)
-            Sleep(delay * 1000);
-          handleInjectionMessage(InjectDll(p.pid, dllToInject));
-        }
-      }
-    }
-  }
-  else
-  {
-    std::cerr << "You did not supplied the program name to inject to. Here are the valid option:\n";
-    std::cerr << desc << "\n";
-    return 1;
-  }
 
   return 0;
 }
