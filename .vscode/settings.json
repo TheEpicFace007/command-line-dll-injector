@@ -69,7 +69,8 @@
     "variant": "cpp",
     "filesystem": "cpp",
     "xstring": "cpp",
-    "xtree": "cpp"
+    "xtree": "cpp",
+    "random": "cpp"
   },
   "C_Cpp.default.includePath": "C:/Users/ASD/Project/cplusplus/lib/vcpkg/installed/x86-windows/include/boost/"
 }
