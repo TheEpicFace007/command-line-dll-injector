@@ -1,3 +1,9 @@
+#ifdef DEBUG
+#else
+// #pragma comment(lib, "../BlackBone.lib")
+#pragma comment(lib, "../dBlackBone.lib")
+#endif
+
 #include <iostream>
 #include <Windows.h>
 #include <WinApiWrapper.h>
@@ -29,10 +35,11 @@ void handleInjectionMessage(InjectDllReturnValue injectionMessage);
 
   if (vm.count("help"))
   {
-    std::cerr << desc << "\n";
+    std::cout << desc << "\n";
     return 0;
   }
 
+  // Set the delay
   float delay;
   if (vm.count("delay"))
   {
@@ -47,6 +54,13 @@ void handleInjectionMessage(InjectDllReturnValue injectionMessage);
     }
   }
 
+  // Check if the dll is present
+  std::string dll_path;
+  if (vm.count("dll"))
+  {
+    dll_path = vm["dll"].as<std::string>();
+    std::cout << dll_path << "\n";
+  }
 
   return 0;
 }

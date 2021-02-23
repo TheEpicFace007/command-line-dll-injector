@@ -64,4 +64,4 @@ enum class InjectDllReturnValue
  * @param path The path of the dll
  * @return Return false if there was a error while injecting
 */
-InjectDllReturnValue InjectDll(DWORD pid, std::string Path);
+void InjectDll(DWORD pid, std::string Path);

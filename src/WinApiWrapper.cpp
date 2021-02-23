@@ -83,7 +83,6 @@ void waitForProgramLaunchAsync(const std::wstring toWatch, std::function<void(DW
   }).detach();
 }
 
-InjectDllReturnValue InjectDll(DWORD pid, std::string Path)
+void InjectDll(DWORD pid, std::string Path)
 {
-  blackbone::dlls 
 }
