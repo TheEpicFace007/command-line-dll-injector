@@ -36,7 +36,8 @@ int main(int argc, char const *argv[])
   ("exe,e", po::value<std::string>(), "The program exe file name to inject the onto Example: mspaint.exe")
   // ("process-name,p", po::value<std::string>(), "The program process name")
   ("watch,w", "Inject the DLL as soon as the specified program is launched")
-  ("delay", po::value<float>(), "Wait a certain aount of time before injecting in seconds");
+  ("delay", po::value<float>(), "Wait a certain aount of time before injecting in seconds")
+  ("unload-dll,u", "Unload the dll that is going to be injected if it's already loaded");
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm, true);
@@ -48,7 +49,7 @@ int main(int argc, char const *argv[])
     return 0;
   }
 
-  if (vm.count("process-name") ^ vm.count("exe") == false)
+  if (!vm.count("exe"))
   {
     std::cerr << "Error: " << "Invalid args." << std::endl;
     std::cerr << desc << std::endl;
@@ -127,6 +128,15 @@ if (vm.count("exe"))
       std::cout << "An error has happened while attaching blackbone to the process.\n";
       return 1;
     }
+
+    // attach the dll
+    if (vm.count("unload-dll"))
+    {
+      auto isError = NT_ERROR(process.modules().Unload(process.modules().GetModule(utf8ToUtf16(vm["dll"].as<std::string>()))));
+      if (isError)
+        std::cerr << "There was a error unloading the dll on the process. Continuing execution of the program.";
+    }
+
     if (dll_peimage.pureIL())
     {
       bool didInjectILDll;
