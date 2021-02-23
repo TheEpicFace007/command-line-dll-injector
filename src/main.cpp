@@ -80,7 +80,6 @@ int main(int argc, char const *argv[])
       return 1;
     }
     dll_path = std::filesystem::absolute(std::filesystem::directory_entry(dll_path).path()).generic_u8string();
-    std::cout << dbg(dll_path) << "\n";
   }
 
   // Attacg the dll
