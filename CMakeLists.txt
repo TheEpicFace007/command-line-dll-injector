@@ -28,7 +28,7 @@ FIND_PACKAGE(Boost)
 target_include_directories(main PUBLIC Boost_INCLUDE_DIR)
 
 # target_link_options(main PUBLIC)
-target_link_options(main PUBLIC "/subsystem:console")
+target_link_options(main PUBLIC "/subsystem:console" "/LTCG")
 target_compile_options(main PUBLIC
 "/MT")
 
