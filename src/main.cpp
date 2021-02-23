@@ -122,6 +122,7 @@ if (vm.count("exe"))
     }
 
     // NT_ERROR
+    Sleep(delay * 1000);
     if (((((ULONG)(process.Attach(pid))) >> 30) == 3))
     {
       std::cout << "An error has happened while attaching blackbone to the process.\n";
