@@ -19,6 +19,8 @@
 #include <BlackBone/PE/PEImage.h>
 #include <BlackBone/Misc/Utils.h>
 #include <filesystem>
+#include <BlackBone/PE/PEImage.h>
+#include <BlackBone/PE/ImageNET.h>
 
 using namespace std::chrono_literals;
 namespace po = boost::program_options;
@@ -82,8 +84,8 @@ int main(int argc, char const *argv[])
   // Attacg the dll
   if (vm.count("process-name"))
   {
-    std::wstring processName = utf8ToUtf16(vm["process-name"].as<std::string>());
-    std::cerr << "Feature not added yet"    
+    std::cerr << "Feature not added yet" << std::endl; 
+    return 1;
   }
   else if (vm.count("exe"))
   {
@@ -103,7 +105,48 @@ int main(int argc, char const *argv[])
 
       pid = blackbone::Process::EnumByName(utf8ToUtf16(exe_name))[0];
     }
-    std::cout << "Got PID: " << pid << "\n";
+    
+    blackbone::Process process;
+    process.EnsureInit();
+    HANDLE processHandle;
+    HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+
+    blackbone::pe::PEImage dll_peimage;
+    dll_peimage.Load(utf8ToUtf16(dll_path));
+
+    // Check the file format
+/*     if (IsWow64(h) && dll_peimage.mType() != blackbone::eModType::mt_mod64)
+    {
+      std::cerr << "Error: attempt to load a 32 bit dll on a 64 bit process\n";
+      return 1;
+    }
+    else if (IsX86Process(h) && dll_peimage.mType() != blackbone::eModType::mt_mod32)
+    {
+      std::cerr << "Error: attempt to load a 64 bit dll on a 32 bit process\n";
+      return 1;
+    }
+ */    
+    process.Attach(pid);
+    if (dll_peimage.pureIL())
+    {
+      bool didInjectILDll = process.modules().InjectPureIL(
+        blackbone::ImageNet::GetImageRuntimeVer(dll_peimage.path().c_str()),
+        dll_peimage.path(),
+        std::wstring(),
+        std::wstring(),
+        0
+      );
+
+      if (!didInjectILDll)
+      {
+        std::cerr << "An error has happened while injecting an Il(dot net) dll\n";
+        return 2;
+      }
+    }
+    else
+    {
+
+    }
   }
 
   return 0;
