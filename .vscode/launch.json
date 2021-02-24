@@ -37,6 +37,12 @@
       "cwd": "${workspaceFolder}",
       "environment": [],
       "console": "externalTerminal"
-    }
+    },
+    {
+      "name": "(Windows) Attach",
+      "type": "cppvsdbg",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    },
   ]
 }
