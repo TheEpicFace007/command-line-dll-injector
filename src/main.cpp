@@ -20,14 +20,23 @@
 #include <BlackBone/Misc/Utils.h>
 #include <filesystem>
 #include <BlackBone/PE/PEImage.h>
-#include <spinner.h>
 #include <BlackBone/PE/ImageNET.h>
+#define NAKED __declspec( naked )
+
 
 using namespace std::chrono_literals;
 namespace po = boost::program_options;
 
+bool nt_error(NTSTATUS status);
+
+// #define WAIT_DEBUG_ATTACH
+
 int main(int argc, char const *argv[])
 {
+#ifdef WAIT_DEBUG_ATTACH
+  BOOL isDebuggerPresent;
+  while (!isDebuggerPresent) { CheckRemoteDebuggerPresent(GetModuleHandle(NULL), &isDebuggerPresent); };
+#endif
   SetConsoleTitleW(L"Command line dll injector");
   blackbone::InitializeOnce();
   po::options_description desc("Allowed options:");
@@ -133,12 +142,19 @@ if (vm.count("exe"))
     // attach the dll
     if (vm.count("unload-dll"))
     {
-      spinnercpp::spinner s(200ms, 63, "Unloaded dll!", "", "", "  Unloading " + vm["dll"].as<std::string>() + "...");
-      s.start();
-      auto isError = NT_ERROR(process.modules().Unload(process.modules().GetModule(utf8ToUtf16(vm["dll"].as<std::string>()))));
-      if (isError)
-        std::cerr << "There was a error unloading the dll on the process. Continuing execution of the program.";
-      s.stop();
+      std::cout << "Unloading dll. . ." << std::endl;
+      auto dll_ = process.modules().GetModule(utf8ToUtf16(vm["dll_"].as<std::string>()));
+      if (dll_->type != blackbone::eModType::mt_unknown || dll_->size == 0x0)
+      {
+        if (nt_error(process.modules().Unload(dll_)))
+          std::cerr << "There was a error unloading the dll on the process. Continuing execution of the program." << std::endl;
+        else
+        {
+          std::cout << "Unloaded dll!" << std::endl;
+        }
+      }
+      else
+        std::cerr << "Couldn't unload dll as it's not present in memory." << std::endl;
     }
 
     if (dll_peimage.pureIL())
@@ -175,4 +191,9 @@ dll_injection_error:
 
   std::cout << desc << "\n";
   return 0;
+}
+
+bool nt_error(NTSTATUS status)
+{
+  return ((((ULONG)(status)) >> 30) == 3);
 }

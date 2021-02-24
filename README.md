@@ -1,3 +1,4 @@
+[![License: WTFPL](https://img.shields.io/badge/License-WTFPL-brightgreen.svg)](http://www.wtfpl.net/about/)
 # command-line-dll-injector
 An command line utility made for injecting Dll
 
@@ -17,14 +18,14 @@ The program fully respect  the CLI Guidelines which mean that the program will b
 
 # Command line argument
 
-|    **Argument**    | **Description**                                                                           | **Example**          |
-|:------------------:|-------------------------------------------------------------------------------------------|----------------------|
-|  `-h [ --help ]`   | Produce a help message                                                                    |                      |
-| `-d [ --dll ] arg` | Specify the dll to launch                                                                 | `--dll cheat.dll`    |
-| `-e [ --exe ] arg` | Specify the program name to inject                                                        | `--exe MGSV.exe` |
-|  `-w [ --watch ]`  | Wait for the specified to be opened before injecting                                      | `-w -p game.exe`     |
-|   `--delay arg`    | Wait a amount of time before injecting(in seconds)                                        | `--delay 1.5`        |
-| `-u [ --unload ]`  | Unload the dll that is going to be injected if it's already present in the process memory |                      |
+|    **Argument**    | **Description**                                                                                          | **Example**       |
+|:------------------:|-----------------------------------------------------------------------------------------------------------|-------------------|
+|  `-h [ --help ]`   | Produce a help message                                                                                    |                   |
+| `-d [ --dll ] arg` | Specify the dll to launch                                                                                 | `--dll cheat.dll` |
+| `-e [ --exe ] arg` | Specify the program name to inject                                                                        | `--exe MGSV.exe`  |
+|  `-w [ --watch ]`  | Wait for the specified to be opened before injecting                                                      | `-w -p game.exe`  |
+|   `--delay arg`    | Wait a amount of time before injecting(in seconds)                                                        | `--delay 1.5`     |
+| `-u [ --unload ]`  | Unload the dll that is going to be injected if it's already present in the process memory (not added yet) |                   |
 
 # Example:
 

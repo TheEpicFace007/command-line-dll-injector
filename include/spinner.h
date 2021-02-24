@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __SPINNERCPP__
 #define __SPINNERCPP__
 
