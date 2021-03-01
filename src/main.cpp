@@ -39,15 +39,15 @@ int main(int argc, char const *argv[])
 #endif
   SetConsoleTitleW(L"Command line dll injector");
   blackbone::InitializeOnce();
-  po::options_description desc("Allowed options:");
+  po::options_description desc("Allowed options");
   desc.add_options()
   ("help,h", "Produce help message of the program")
   ("dll,d", po::value<std::string>(), "The dll to inject")
   ("exe,e", po::value<std::string>(), "The program exe file name to inject the onto Example: mspaint.exe")
   // ("process-name,p", po::value<std::string>(), "The program process name")
   ("watch,w", "Inject the DLL as soon as the specified program is launched")
-  ("delay", po::value<float>(), "Wait a certain aount of time before injecting in seconds")
-  ("unload-dll,u", "Unload the dll that is going to be injected if it's already loaded");
+  ("delay", po::value<float>(), "Wait a certain aount of time before injecting in seconds");
+  // ("unload-dll,u", "Unload the dll that is going to be injected if it's already loaded");
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm, true);
@@ -115,17 +115,19 @@ if (vm.count("exe"))
     
     blackbone::Process process;
     HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    process.Attach(h);
 
     blackbone::pe::PEImage dll_peimage;
     dll_peimage.Load(utf8ToUtf16(dll_path));
 
     // Check the file format
-    if (IsWow64(h) && dll_peimage.mType() != blackbone::eModType::mt_mod64)
+    if (dll_peimage.mType() == blackbone::eModType::mt_default || dll_peimage.mType() == blackbone::eModType::mt_unknown);
+    else if (process.core().isWow64() && dll_peimage.mType() != blackbone::eModType::mt_mod64)
     {
       std::cerr << "Error: attempt to load a 32 bit dll on a 64 bit process\n";
       return 1;
     }
-    else if (IsX86Process(h) && dll_peimage.mType() != blackbone::eModType::mt_mod32)
+    else if (!process.core().isWow64() && dll_peimage.mType() != blackbone::eModType::mt_mod32)
     {
       std::cerr << "Error: attempt to load a 64 bit dll on a 32 bit process\n";
       return 1;
@@ -133,11 +135,6 @@ if (vm.count("exe"))
 
     // NT_ERROR
     Sleep(delay * 1000);
-    if (((((ULONG)(process.Attach(pid))) >> 30) == 3))
-    {
-      std::cout << "An error has happened while attaching blackbone to the process.\n";
-      return 1;
-    }
 
     // attach the dll
     if (vm.count("unload-dll"))
@@ -179,7 +176,7 @@ dll_injection_error:
     else
     {
       bool didInjectedDll;
-      if (!process.modules().Inject(dll_peimage.path(), process.threads().getMain()).success())
+      if (!process.modules().Inject(dll_peimage.path(), process.threads().getMostExecuted()).success())
       {
         std::cerr << "An error has happened when injecting the dll\n";
         return 1;
